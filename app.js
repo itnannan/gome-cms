@@ -4,6 +4,7 @@ const util = require('util')
 const stream = require('stream')
 const path = require('path')
 const mongoose = require('mongoose')
+const PlatformModel = require('./db/model/platform')
 const app = express()
 const bodyParser = require('body-parser')
 const multer = require('multer')
@@ -79,16 +80,40 @@ app.post('/api/confirm',function(req,res){
     const win = windows(data)
     console.log(win)
     
-    const file = fs.createReadStream(path.join(__dirname,'/generate/web/main/header.html'))
-    const write = fs.createWriteStream(path.join(__dirname,'/generate/dist/main/main.html'))
-    file.pipe(new Transform(win))
-                    .pipe(write)
+    delete data.fileList
 
-    write.on('close',function(){
-        res.send({msg:'ok'})
+    PlatformModel.findOne({platform:data.platform},function(err,plat){
+        if(plat){
+            PlatformModel.update({platform:'windows'},data,function(err,data){
+                if(err){
+                    console.log(err)
+                }else{
+                    console.log(data)
+                    const file = fs.createReadStream(path.join(__dirname,'/generate/web/main/header.html'))
+                    const write = fs.createWriteStream(path.join(__dirname,'/generate/dist/main/main.html'))
+                    file.pipe(new Transform(win)).pipe(write)
+
+                    write.on('close',function(){
+                        res.send({msg:'ok'})
+                    })
+                }
+            })
+        }else{
+            new PlatformModel(data).save(function(err,data){
+                if(err){
+                    console.log(err)
+                }else{
+                    const file = fs.createReadStream(path.join(__dirname,'/generate/web/main/header.html'))
+                    const write = fs.createWriteStream(path.join(__dirname,'/generate/dist/main/main.html'))
+                    file.pipe(new Transform(win)).pipe(write)
+
+                    write.on('close',function(){
+                        res.send({msg:'ok'})
+                    })
+                }
+            })
+        }
     })
-
-   
 })
 
 //重新编辑

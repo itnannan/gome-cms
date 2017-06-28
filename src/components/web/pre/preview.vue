@@ -13,13 +13,13 @@
 			</div>
 		</div>
 		<div class="nav" id="nav">
-			<span class="window-btn active">Windows</span>
-			<span class="mac-btn">Mac</span>
-			<span class="android-btn">Android</span>
-			<span class="ios-btn">iOS</span>
+			<span class="window-btn" :class="[isActive==0?active:'']">Windows</span>
+			<span class="mac-btn" :class="[isActive==1?active:'']">Mac</span>
+			<span class="android-btn" :class="[isActive==2?active:'']">Android</span>
+			<span class="ios-btn" :class="[isActive==3?active:'']">iOS</span>
 		</div>
 		<div class="content-box" id="contentBox">
-			<div class="windows-content show" :style="background">
+			<div :class="platformClass" :style="background">
 				<div class="download">
 					<p class="title">{{windows.title}}</p>
 					<p class="slogan">{{windows.summary}}</p>
@@ -38,7 +38,7 @@
 					<a class="more" href="../versionList/versionList.html#Windows">查看更多>></a>
 				</div>
 			</div>
-			<div class="mac-content hide">
+			<!-- <div class="mac-content hide">
 				<div class="download">
 					<p class="title">美办1.0.1 for Mac</p>
 					<p class="slogan">优化版本更新机制；支持消息复制，删除，撤回等操作</p>
@@ -98,7 +98,7 @@
 					</ul>
 					<a class="more" href="../versionList/versionList.html#Ios">查看更多>></a>
 				</div>
-			</div>
+			</div> -->
 		</div>
 		<div class="buttons">
 			<el-button type="primary" @click='confirm'>确定</el-button>
@@ -123,9 +123,37 @@
 					address: '',
 					fileList:[{}]
 				},
-				mac:{},
-				android:{},
-				ios:{}
+				mac:{
+					title: '',
+					summary: '',
+					size: '',
+					version: '',
+					system: '',
+					date: '',
+					address: '',
+					fileList:[{}]
+				},
+				android:{
+					title: '',
+					summary: '',
+					size: '',
+					version: '',
+					system: '',
+					date: '',
+					address: '',
+					fileList:[{}]
+				},
+				ios:{
+					title: '',
+					summary: '',
+					size: '',
+					version: '',
+					system: '',
+					date: '',
+					address: '',
+					fileList:[{}]
+				},
+				active:'active'
 			};
 	    },
 	    created(){
@@ -133,8 +161,29 @@
 	    },
 	    computed:{
 	    	background:function(){
-	    		const img = this.windows.fileList[0]?this.windows.fileList[0].result:""
+	    		//const platform = this.$route.params.id;
+	    		const platform = 'windows';
+	    		const img = this[platform].fileList[0]?this[platform].fileList[0].result:""
 	    		return img?'background-image:url('+img+')':''
+	    	},
+	    	platformClass:function(){
+				const platform = this.$route.params.id;
+
+				return platform+'-content show';
+	    	},
+	    	isActive:function(){
+	    		const platform = this.$route.params.id;
+	    		if(platform == 'windows'){
+	    			return 0;
+	    		}else if(platform == 'mac'){
+	    			return 1;
+	    		}else if(platform == 'android'){
+					return 2;
+	    		}else if(platform == 'ios'){
+	    			return 3;
+	    		}else{
+	    			return 0;
+	    		}
 	    	}
 	    },
 	    methods: {
@@ -149,7 +198,7 @@
 						if(res.data.code == 1){
 
 						}else{
-							_this[platform] = res.data
+							_this['windows'] = res.data
 						}
 					})
 					.catch(function(err){

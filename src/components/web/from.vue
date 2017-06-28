@@ -4,7 +4,7 @@
       <el-form-item label="平台" prop="platform">
         <el-radio-group v-model="form.platform" >
           <el-radio-button label="windows">windows</el-radio-button>
-          <el-radio-button label="moc">moc</el-radio-button>
+          <el-radio-button label="mac">mac</el-radio-button>
           <el-radio-button label="android">android</el-radio-button>
           <el-radio-button label="ios">ios</el-radio-button>
         </el-radio-group>
@@ -72,7 +72,8 @@
         <el-input type="textarea" v-model="form.desc"></el-input>
       </el-form-item> -->
       <el-form-item class='button'>
-        <el-button @click='previewAddress("form")'>提交</el-button>
+        <el-button type='primary' @click='previewAddress("form")'>提交</el-button>
+        <el-button type='primary' @click='resetForm("form")'>重置</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -128,6 +129,9 @@ import router from '@/router/index'
       }
     },
     computed:{},
+    created(){
+      this.getDate()
+    },
     methods: {
       onSubmit(formName) {
         this.upload(formName)
@@ -186,6 +190,21 @@ import router from '@/router/index'
           }
         });
         
+      },
+      getDate() {
+        const _this = this
+        axios.post('http://127.0.0.1:12345/api/platform/all')
+          .then(function(res){
+            console.log('res',res)
+            if(res.data.code == 1){
+
+            }else{
+              _this['form'] = res.data || _this['form']
+            }
+          })
+          .catch(function(err){
+            console.log(err);
+          })
       }
     }
   }
