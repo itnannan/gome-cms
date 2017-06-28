@@ -138,6 +138,7 @@ import router from '@/router/index'
       },
       handleRemove(file, fileList) {
         console.log(file, fileList)
+        this.form.fileList.pop()
       },
       handlePreview(file) {
         //console.log(file)
