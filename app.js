@@ -8,17 +8,29 @@ const PlatformModel = require('./db/model/platform')
 const app = express()
 const bodyParser = require('body-parser')
 const multer = require('multer')
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, './target/')
+    },
+    filename: function (req, file, cb) {
+        console.log(file)
+        cb(null, file.originalname)
+    }
+})
+
+const upload = multer({storage: storage})
 const Vue = require('vue')
 const {createRenderer} = require('vue-server-renderer')
-const windows = require('./generate/web/main/test.js').windows
+const router = require('./router/web')
 
 const port = 12345
 
 mongoose.connect('mongodb://127.0.0.1/webMain')
 
 app.listen(port)
-app.use(express.static(path.join(__dirname,'dist')))
-app.use(bodyParser.json())
+app.use("/target",express.static(path.join(__dirname,'target')))
+app.use(bodyParser.json({limit:5000000}))
+app.use(bodyParser.urlencoded({ extended: true ,limit:5000000}))
 
 app.all('*',function(req,res,next){
 	res.header("Access-Control-Allow-Origin", "*")
@@ -55,6 +67,14 @@ app.post('/api/platform/:id',function(req,res){
     }
 })
 
+app.post('/api/web/bannerPic', upload.single('name'), function(req,res){
+    console.log(req.file)
+
+    //改名
+    
+    res.send({msg:'ok',code:0, src:'http://127.0.0.1:12345/'+req.file.destination+req.file.filename})
+})
+
 
 function Transform (str){
     stream.Transform.call(this)
@@ -73,15 +93,22 @@ Transform.prototype._flush  = function(cb){
     cb()
 }
 //确定生成页面
-app.post('/api/confirm',function(req,res){
+app.post('/api/confirm',router.confirm)
+/*function(req,res){
     console.log(' generate a page')
     const data = app.locals.form
     app.locals.form = ''
     const win = windows(data)
     console.log(win)
+    //'src/components/web/css/img/download/',
+    fs.writeFile(path.join(__dirname,data.platform+'-banner.png'),function(err){
+        if(err){
+            return console.log(err)
+        }else{
+            delete data.fileList
+        }
+    })
     
-    delete data.fileList
-
     PlatformModel.findOne({platform:data.platform},function(err,plat){
         if(plat){
             PlatformModel.update({platform:'windows'},data,function(err,data){
@@ -114,8 +141,7 @@ app.post('/api/confirm',function(req,res){
             })
         }
     })
-})
-
+}*/
 //重新编辑
 app.post('/api/edit',function(req,res){
     res.send({msg:'ok'})

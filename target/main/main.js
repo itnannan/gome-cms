@@ -7,12 +7,13 @@ for (var i = 0; i < navBtns.length; i++) {
 		navBtns[i].onclick = function(){
 			console.log(1)
 			for (var j = 0; j < contentBox.children.length; j++) {
-				removeClass(contentBox.children[j],'show');
+				//removeClass(contentBox.children[j],'show');
+				//addClass(contentBox.children[j],'hide');
 			}
 			for (var q = 0; q < navBtns.length; q++) {
 				removeClass(navBtns[q],'active');
 			}
-			addClass(contentBox.children[i],'show');
+			//addClass(contentBox.children[i],'show');
 			addClass(this,'active');
 		}
 	})(i)

@@ -18,7 +18,7 @@
 			<span class="android-btn" :class="[isActive==2?active:'']">Android</span>
 			<span class="ios-btn" :class="[isActive==3?active:'']">iOS</span>
 		</div>
-		<div class="content-box" id="contentBox">
+		<div class="content-box" id="contentBox" v-for="(item,key,index) in windows">
 			<div :class="platformClass" :style="background">
 				<div class="download">
 					<p class="title">{{windows.title}}</p>
@@ -161,8 +161,7 @@
 	    },
 	    computed:{
 	    	background:function(){
-	    		//const platform = this.$route.params.id;
-	    		const platform = 'windows';
+	    		const platform = this.$route.params.id;
 	    		const img = this[platform].fileList[0]?this[platform].fileList[0].result:""
 	    		return img?'background-image:url('+img+')':''
 	    	},
