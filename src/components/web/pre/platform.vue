@@ -18,7 +18,7 @@
 			<span class="android-btn" :class="[isActive==2?active:'']">Android</span>
 			<span class="ios-btn" :class="[isActive==3?active:'']">iOS</span>
 		</div>
-		<div class="content-box" id="contentBox" v-for="(item,key,index) in windows">
+		<div class="content-box" id="contentBox" v-for="item in banner">
 			<div :class="platformClass" :style="background">
 				<div class="download">
 					<p class="title">{{windows.title}}</p>
@@ -108,58 +108,52 @@
 </template>
 <script>
 	import axios from 'axios'
-	import router from '@/router/index'
 	import "./main.css"
 	export default {
 	    data() {
 			return {
-				windows:{
-					title: '',
-					summary: '',
-					size: '',
-					version: '',
-					system: '',
-					date: '',
-					address: '',
-					fileList:[{}]
+				banner:{
+					windows:{},
+					mac:{},
+					ios:{},
+					android:{}
 				},
-				mac:{
-					title: '',
-					summary: '',
-					size: '',
-					version: '',
-					system: '',
-					date: '',
-					address: '',
-					fileList:[{}]
-				},
-				android:{
-					title: '',
-					summary: '',
-					size: '',
-					version: '',
-					system: '',
-					date: '',
-					address: '',
-					fileList:[{}]
-				},
-				ios:{
-					title: '',
-					summary: '',
-					size: '',
-					version: '',
-					system: '',
-					date: '',
-					address: '',
-					fileList:[{}]
-				},
+				details:[],
 				active:'active'
 			};
 	    },
 	    created(){
-	    	this.getDate()
+	    	const platform = this.$store.state.banner.platform
+
+	    	this.banner[platform] = this.$store.state.banner
+	    	this.banner[platform].details = this.$store.state.details 
+	    	function getDate(platform){
+	    		return {
+	    			banner: axios.get('http://127.0.0.1:12345/api/web/banner/' + platform),
+	    			detail: axios.get('http://127.0.0.1:12345/api/web/version/' + platform)
+	    		}
+	    	}
+
+	    	if(platform !== 'windows'){
+	    		axios.all([getDate('windows').banner,getDate('windows').detail])
+	    			.then((banner, detail) => {
+
+	    			})
+	    	}
+	    	if(platform !== 'windows'){
+	    		
+	    	}
+	    	if(platform !== 'windows'){
+	    		
+	    	}
+	    	if(platform !== 'windows'){
+	    		
+	    	}
 	    },
 	    computed:{
+	    	windows:function(){
+	    		return this.$store.state.banner
+	    	},
 	    	background:function(){
 	    		const platform = this.$route.params.id;
 	    		const img = this[platform].fileList[0]?this[platform].fileList[0].result:""

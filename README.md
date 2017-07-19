@@ -23,15 +23,30 @@ gome-cms
 >## web端接口
 	/api/web/.....
 >>###
-	/api/web/preview  (预览-提交)
+	/api/web/pic (上传图片)  'post'
 
-	/api/web/bannerPic (banner背景图上传)
+	/api/web/confirm (确定)  'post'
 
-	/api/web/confirm (确定)
-	
+	/api/web/version/:platform (获取某一个平台的 version列表) 'get'
+
+	/api/web/detail/:platform/:version (获取某一个平台的 某一个版本 的详情) 'get'
+
 	/api/web/edit (编辑)
-
+	method: GET
 	
+	{
+		version: 
+		platform:
+	}
+
+	/api/web/delete  (删除)
+	method: GET
+	
+	{
+		version: 
+		platform:
+	}
+
 
 >## h5端接口
 	/api/h5/.....

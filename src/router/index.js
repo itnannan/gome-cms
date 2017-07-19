@@ -19,13 +19,11 @@ export default new Router({
     routes: [
         {
             path: '/',
-            component: Index,
-            children:[
-                {
-                    path:'/:id',
-                    component: Index
-                }
-            ]
+            component: Index
+        },
+        {
+            path:'/edit',   //   router.push({path:'/edit',query:{platform:'windows',version:'V1.2.1'}})
+            component: Index
         },
         {
     		path:'/preview/platform/:id',
