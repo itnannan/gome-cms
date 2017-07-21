@@ -43,6 +43,8 @@ Transform.prototype._flush  = function(cb){
 
 app.listen(port)
 app.use("/target",express.static(path.join(__dirname,'target')))
+app.use(express.static(path.join(__dirname,'src/components/web/')))
+
 app.use(bodyParser.json({limit:5000000}))
 app.use(bodyParser.urlencoded({ extended: true ,limit:5000000}))
 
@@ -81,7 +83,8 @@ app.post('/api/web/pic', upload.single('pic'), function(req,res){
 //确定生成页面
 app.post('/api/web/confirm',function(req,res,next){
     console.log(req.body)
-    if(!req.body.details || req.body.details.length==0 || !req.body.details[0].title){
+
+    if(!req.body.details || !req.body.details.platform || !req.body.details.lists[0].title){
         return res.send({msg:"跟新详情至少一条",code:1})
     }
     const platform = req.body.banner.platform
@@ -92,7 +95,7 @@ app.post('/api/web/confirm',function(req,res,next){
     //效验 参数是否为
     const bannerValues = _.values(req.body.banner)
     for(let i=0; i<bannerValues.length; i++){
-        if(!bannerValues[i]){
+        if(!bannerValues[i] && bannerValues[i] != 0){
             return res.send({msg:"有参数为空",code:1});
         }
     }
@@ -130,7 +133,7 @@ app.post('/api/web/confirm',function(req,res,next){
         if(detail){
             Detail.update({platform:req.body.banner.platform, version:req.body.banner.version},{
                     platform: req.body.banner.platform,
-                    fileList: req.body.details,
+                    lists: req.body.details.lists,
                     title: req.body.banner.subTitle,
                     version: req.body.banner.version,
                     address: req.body.banner.address,
@@ -146,7 +149,7 @@ app.post('/api/web/confirm',function(req,res,next){
         }else{
             new Detail({
                 platform: req.body.banner.platform,
-                fileList: req.body.details,
+                lists: req.body.details.lists,
                 title: req.body.banner.subTitle,
                 version: req.body.banner.version,
                 address: req.body.banner.address,
@@ -219,7 +222,7 @@ app.get('/api/web/version/:platform',function(req,res){
         if(err){
             return console.log(err)
         }
-        console.log(details)
+        //console.log(details)
         res.send({msg:'ok',code:0,details:details})
     })
 })
@@ -260,6 +263,7 @@ app.get('/api/web/edit',function(req,res){
             if(!detail){
                 return res.send({msg:'没有此版本',code:1})
             }
+            console.log(detail)
             res.send({msg:'ok',code:0,data:{banner:banner,details:detail}})
         })
     })
@@ -277,7 +281,24 @@ app.get('/api/web/delete',function(req,res){
             if(err){
                 return console.log(err)
             }
-            res.send({msg:'ok',code:1,data:{banner:banner,details:detail}})
+            res.send({msg:'ok',code:0,data:{banner:banner,details:detail}})
         })
+    })
+})
+
+//获取获取最新banner
+app.get('/api/web/banner/:platform',function(req,res){
+    const platform = req.params.platform
+
+     Banner.find({platform:platform}).sort({ctime:'-1'}).exec(function(err,banners){
+        if(err){
+            return console.log(err)
+        }
+        if(banners.length){
+            console.log(banners)
+            res.send({msg:'ok',code:0,data:banners[0]})
+        }else{
+            res.send({msg:'没有此版本',code:1})
+        }
     })
 })

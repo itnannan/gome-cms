@@ -52,7 +52,7 @@
       <el-form-item label="下载地址" prop="address">
         <el-input v-model="banner.address" placeholder="例: https://gomeplus.com/V1.1.1.exe"></el-input>
       </el-form-item>
-      <el-form-item v-for="(detail,index) in details" :key="detail.id" label="详情标题" prop="">
+      <el-form-item v-for="(detail, index) in details.lists" :key="index"  label="详情标题" prop="">
         <el-input v-model="detail.title" placeholder="例: 版本详情页中 条目"></el-input>
         <el-button class="remove" type="primary" size="small"  @click="removeVersionDetail(index)">删除此条</el-button>
         <el-upload
@@ -150,11 +150,18 @@ export default {
                 address: '',
                 background: []
             },
-            details:[{
-                title:'',
-                fileList: [],
-                id: (new Date()).getTime()
-            }],
+            details:{
+                address: '',
+                ctime: '',
+                lists: [{
+                    title:'',
+                    fileList:[]
+                }],
+                platform: '',
+                time: '',
+                title: '',
+                version: ''
+            },
             rules: rules,
             labelPosition: 'right',
             releaseTime: new Date()
@@ -167,6 +174,16 @@ export default {
         if(this.$route.fullPath.indexOf('/edit?') > -1){
             const platform = this.$route.query.platform
             const version = this.$route.query.version
+            if(!platform || !version)return;
+
+            if(this.$store.state.banner.platform == platform && this.$store.state.banner.version == version){
+                this.banner = this.$store.state.banner
+                this.releaseTime = new Date(this.$store.state.banner.ctime)
+
+                this.details = this.$store.state.details
+                return;
+            }
+
             axios.get('http://127.0.0.1:12345/api/web/edit',{
                 params:{
                     platform: platform,
@@ -174,8 +191,10 @@ export default {
                 }
             }).then(function(res){
                 if(res.data.code != 0)return;
+                console.log(res.data.data)
                 _this.banner = res.data.data.banner
-                _this.details = res.data.data.details.fileList
+                _this.details = res.data.data.details
+                _this.releaseTime = new Date(res.data.data.banner.ctime)
             }).catch(function(err){
                 console.log(err)
             })
@@ -202,31 +221,27 @@ export default {
         detailPicUpload(index){
             const _this = this
             return function(res,file){
-                console.log(_this.details)
-                _this.details[index].fileList.push({name:res.name,src:res.src})
+                _this.details.lists[index].fileList.push({name:res.name,src:res.src})
             }
         },
         //详情图片 删除
         listRemove(index){
             const _this = this
             return function(file,fileList){
-               _this.details[index].fileList.pop()
+               _this.details.lists[index].fileList = fileList
             }
         },
         //添加版本详情 一条内容
         addVersionDetail(){
-            this.details.push({
+            this.details.lists.push({
                     title:'',
-                    fileList:[],
-                    id:(new Date()).getTime()
+                    fileList:[]
                 })
         },
         //删除版本详情 一条内容
         removeVersionDetail(index){
-            const _this = this
-            return function(){
-                _this.details.splice(index,1)
-            }
+            const _this = this            
+            _this.details.lists.splice(index,1)
         },
         //重置表单(非图片)
         resetForm(formName) {
@@ -238,47 +253,28 @@ export default {
             this.$refs[formName].validate((valid) => {
                 if(valid){
                     this.banner.ctime = this.releaseTime.getTime()
+                    this.banner.time = this.parse(this.banner.ctime)
 
-                    this.$store.commit('emptyDetail')
-
-                    this.$store.commit('upBanner',this.banner)
-                    const detail ={
+                    this.details ={
                         address: this.banner.address,
                         ctime: this.banner.ctime,
-                        fileList: this.details,
+                        lists: this.details.lists,
                         platform: this.banner.platform,
                         time: this.banner.time,
                         title: this.banner.subTitle,
                         version: this.banner.version
                     }
+                    console.log(this.details)
 
-                    //function getUserAccount() {return axios.get('/user/12345');}
-                    //function getUserPermissions() {return axios.get('/user/12345/permissions');}
-                    //axios.all([getUserAccount(), getUserPermissions()]).then(axios.spread(function (acct, perms) {}));
-                    axios.get('http://127.0.0.1:12345/api/web/detail/' + detail.platform + '/' + detail.version)
-                        .then(function(res){
-                            if(!res.data.detail){
-                                _this.$store.commit('addLocalDetail',detail)
-                            }
-                            return axios.get('http://127.0.0.1:12345/api/web/version/'+ detail.platform)
-                        }).then(function(res){
-                            console.log(1,res)
-                            _this.$store.commit('upDetails', res.data.details)
+                    this.$store.commit('upBanner', this.banner)
+                    this.$store.commit('addLocalDetail', this.details)
 
-                            _this.$router.push({path:'/preview/platform/' + detail.platform})
-                        }).catch(function(err){
-                            console.log(err)
-                        })
+                    this.$router.push({path:'/preview/platform/' + this.details.platform})                   
                 }
             });
-
-
-            //this.$store.commit('upBanner',this.banner)
-            //
-            //
             
             //this.$router.push('/preview/platform/windows')
-            /*axios.post('http://127.0.0.1:12345/api/web/confirm',{
+           /* axios.post('http://127.0.0.1:12345/api/web/confirm',{
                 banner:_this.banner,
                 details: _this.details
             }).then(function(res){
@@ -286,6 +282,14 @@ export default {
             }).catch(function(err){
                 console.log(err)
             })*/
+        },
+        //时间转化 2017-01-01
+        parse(stamp){
+            const date = new Date(stamp)
+            const y = date.getFullYear()
+            const m = date.getMonth() + 1
+            const d = date.getDate()
+            return y + "-" + (m > 9?m:'0'+m) + "-" + (d > 9?d:'0'+d) 
         }
     }
 }

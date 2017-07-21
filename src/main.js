@@ -15,10 +15,8 @@ Vue.use(Vuex)
 Vue.use(ElementUI)
 
 const state = {
-	banner:{
-	},
-	details:[
-	]
+	banner:{},
+	details:{}
 }
 
 const actions = {
@@ -34,14 +32,8 @@ const mutations ={
 	upBanner(state,banner){
 		state.banner = banner
 	},
-	upDetails(state,details){
-		state.details = state.details.concat(details)
-	},
-	addLocalDetail(state,details){
-		state.details.push(details)
-	},
-	emptyDetail(state){
-		state.details.splice(0,state.details.length)
+	addLocalDetail(state,detail){
+		state.details = detail
 	}
 }
 

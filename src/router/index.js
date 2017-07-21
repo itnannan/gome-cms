@@ -26,16 +26,19 @@ export default new Router({
             component: Index
         },
         {
-    		path:'/preview/platform/:id',
+    		path:'/preview/platform/:platform',
     		component: Platform
     	},
         {
-            path:'/preview/list',
+            path:'/preview/list/:platform',
             component: List
         },
         {
-            path:'/preview/detail/:id',
+            path:'/preview/detail',
             component: Detail
         }
-    ]
+    ],
+    scrollBehavior (to, from) {
+        return {x:0,y:0}
+    }
 })

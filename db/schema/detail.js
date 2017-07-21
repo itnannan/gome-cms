@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 
 const DetailSchema = new mongoose.Schema({
 	platform: String,
-	fileList: Array,
+	lists: Array,
     title: String,  //每个版本的标题
     version: String,
     address: String,

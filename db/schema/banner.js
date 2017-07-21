@@ -17,7 +17,7 @@ const BannerSchema = new mongoose.Schema({
 BannerSchema.statics = {
     sortByTime: function(platform,cb){
         return this.find({platform:platform})
-            .sort({time:'-1'})
+            .sort({ctime:'-1'})
             .exec(cb)
     }
 }
