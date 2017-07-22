@@ -15,7 +15,7 @@
     <div class="ver-bottom clearfix">
      <div class="ver-bottom-box clearfix">
       <h3>美办更新日志</h3>
-      <ul class="ver-ul selected" id="Ios">
+      <ul class="ver-ul" :class='{"selected":selected("ios")}'  id="Ios">
         <li class="first-li">
           <a href="javascript:;">
             iOS平台
@@ -24,7 +24,7 @@
         </li>
         <li class="ver-li" v-for="(detail,index) in ios" :class="[index==ios.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
       </ul>
-      <ul class="ver-ul" id="Android">
+      <ul class="ver-ul"  :class='{"selected":selected("android")}' id="Android">
         <li class="ver-li first-li">
           <a href="javascript:;">
             Android平台
@@ -33,7 +33,7 @@
         </li>
         <li class="ver-li" v-for="(detail,index) in android" :class="[index==android.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
       </ul>
-      <ul class="ver-ul" id="Mac">
+      <ul class="ver-ul"  :class='{selected:selected("mac")}' id="Mac">
         <li class="ver-li first-li">
           <a href="javascript:;">
             Mac平台
@@ -42,14 +42,14 @@
         </li>
         <li class="ver-li" v-for="(detail,index) in mac" :class="[index==mac.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
       </ul>
-      <ul class="ver-ul" id="Windows">
+      <ul class="ver-ul"  :class='{selected:selected("windows")}' id="Windows">
         <li class="ver-li first-li">
           <a href="javascript:;">
             Windows平台
             <span></span>
           </a>
         </li>
-        <li class="ver-li" v-for="(detail,index) in windows" :class="[index==windows.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
+        <li class="ver-li" v-for="(detail,index) in windows" :class="[(index+1)==windows.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
       </ul>
     </div>
   </div>
@@ -115,6 +115,16 @@ export default {
         getDate('ios')
     },
     methods: {
+      selected(platform){
+         
+            console.log(platform)
+            if(platform == this.$route.params.platform){
+              return true
+            }else{
+              return false
+            }
+         
+        },
         confirm(){
             const _this = this
             axios.post('http://127.0.0.1:12345/api/web/confirm',{

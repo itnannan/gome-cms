@@ -32,7 +32,7 @@
 					<ul>
 						<li v-for="item in details.windows"><a href="javascript:;" @click="toDetail('windows',banner.windows.version)">{{item.title}}<span class="time">{{item.time}}</span></a></li>
 					</ul>
-					<a class="more" href="../versionList/versionList.html#Windows">查看更多>></a>
+					<a class="more" href="javascript:;" @click="toList('windows')">查看更多>></a>
 				</div>
 			</div>
 			<div class="mac-content" :class="{show : isActive=='mac'?true:false}">
@@ -48,7 +48,7 @@
 					<ul>
 						<li v-for="item in details.mac"><a :href="'../detail/mac-' + item.version + '.html'">{{item.title}}<span class="time">{{item.time}}</span></a></li>
 					</ul>
-					<a class="more" href="../versionList/versionList.html#Mac">查看更多>></a>
+					<a class="more" href="javascript:;" @click="toList('mac')">查看更多>></a>
 				</div>
 			</div>
 			<div class="android-content"  :class="{show : isActive=='android'?true:false}">
@@ -63,7 +63,7 @@
 					<ul>
 						<li v-for="item in details.android"><a :href="'../detail/android-' + item.version + '.html'">{{item.title}}<span class="time">{{item.time}}</span></a></li>
 					</ul>
-					<a class="more" href="../versionList/versionList.html#Android">查看更多>></a>
+					<a class="more" href="javascript:;" @click="toList('android')">查看更多>></a>
 				</div>
 			</div>
 			<div class="ios-content"  :class="{show : isActive=='ios'?true:false}">
@@ -78,7 +78,7 @@
 					<ul>
 						<li v-for="item in details.ios"><a :href="'../detail/ios-' + item.version + '.html'">{{item.title}}<span class="time">{{item.time}}</span></a></li>
 					</ul>
-					<a class="more" href="../versionList/versionList.html">查看更多>></a>
+					<a class="more" href="javascript:;" @click="toList('ios')">查看更多>></a>
 				</div>
 			</div>
 		</div>
@@ -204,6 +204,10 @@
 			//跳转详情页
 			toDetail(platform, version){
 				this.$router.push({path:'/preview/detail',query:{platform: platform, version:version} })
+			},
+			//跳转列表页
+			toList(platform){
+				this.$router.push({path:'/preview/list/' + platform})
 			}
 	    }
 	  }
