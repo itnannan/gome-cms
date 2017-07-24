@@ -22,7 +22,10 @@
             <span></span>
           </a>
         </li>
-        <li class="ver-li" v-for="(detail,index) in ios" :class="[index==ios.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
+        <li class="ver-li" v-for="(detail,index) in ios" :class="[(index+1)==ios.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p>
+        <el-button class="deleteBtnPos" type="primary" @click="deleteVersion('ios',detail.version,index)">删除</el-button>
+        <el-button class="editBtnPos" type="primary" @click="edit('ios',detail.version)">编辑</el-button>
+        </li>
       </ul>
       <ul class="ver-ul"  :class='{"selected":selected("android")}' id="Android">
         <li class="ver-li first-li">
@@ -31,7 +34,11 @@
             <span></span>
           </a>
         </li>
-        <li class="ver-li" v-for="(detail,index) in android" :class="[index==android.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
+        <li class="ver-li" v-for="(detail,index) in android" :class="[(index+1)==android.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p>
+        
+            <el-button class="deleteBtnPos" type="primary" @click="deleteVersion('android',detail.version,index)">删除</el-button>
+            <el-button class="editBtnPos" type="primary" @click="edit('android',detail.version)">编辑</el-button>
+        </li>
       </ul>
       <ul class="ver-ul"  :class='{selected:selected("mac")}' id="Mac">
         <li class="ver-li first-li">
@@ -40,7 +47,10 @@
             <span></span>
           </a>
         </li>
-        <li class="ver-li" v-for="(detail,index) in mac" :class="[index==mac.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
+        <li class="ver-li" v-for="(detail,index) in mac" :class="[(index+1)==mac.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p>
+          <el-button class="deleteBtnPos" type="primary" @click="deleteVersion('mac',detail.version,index)">删除</el-button>
+          <el-button class="editBtnPos" type="primary" @click="edit('mac',detail.version)">编辑</el-button>
+        </li>
       </ul>
       <ul class="ver-ul"  :class='{selected:selected("windows")}' id="Windows">
         <li class="ver-li first-li">
@@ -49,13 +59,16 @@
             <span></span>
           </a>
         </li>
-        <li class="ver-li" v-for="(detail,index) in windows" :class="[(index+1)==windows.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p></li>
+        <li class="ver-li" v-for="(detail,index) in windows" :class="[(index+1)==windows.length?'last-li':'']"><a href="javascript:;" @click="toDetail(detail.platform, detail.version)" class="ver-li-a">{{detail.title}}<span></span></a><p>发布日期：{{detail.time}}</p>
+          <el-button class="deleteBtnPos" type="primary" @click="deleteVersion('windows',detail.version,index)">删除</el-button>
+          <el-button class="editBtnPos" type="primary" @click="edit('windows',detail.version)">编辑</el-button>
+        </li>
       </ul>
     </div>
   </div>
     <div class="buttons">
         <el-button type="primary" @click='confirm'>确定</el-button>
-        <el-button type="primary" @click='edit(detail.platform, detail.version)'>编辑</el-button>
+        <el-button type="primary" @click='edit(platform, version)'>编辑</el-button>
         <el-button type="primary" @click='backToDown(platform)'>返回下载页</el-button>
     </div>
 </div> 
@@ -74,6 +87,9 @@ export default {
     computed:{
         platform(){
             return this.$store.state.banner.platform
+        },
+        version(){
+          return this.$store.state.banner.version
         }
     },
     created(){
@@ -84,6 +100,7 @@ export default {
                     let details = res.data.details
                     if(platform == _this.$store.state.details.platform){
                         if(details.length){
+                          if(findSame(details, _this.$store.state.details)){
                             details = details.map((item) => {
                                 if(
                                     item.version == _this.$store.state.details.version
@@ -93,6 +110,9 @@ export default {
                                     return item
                                 }
                             })
+                          }else{
+                            details.push(_this.$store.state.details)
+                          }
                         }else{
                             details.push(_this.$store.state.details)
                         }
@@ -109,54 +129,88 @@ export default {
                 })
         }
 
+        function findSame(arr,item){
+          for(let i=0; i<arr.length; i++){
+            if(arr[i].version == item.version){
+              return true
+            }
+          }
+          return false
+        }
+
         getDate('windows')
         getDate('android')
         getDate('mac')
         getDate('ios')
     },
     methods: {
-      selected(platform){
-         
-            console.log(platform)
-            if(platform == this.$route.params.platform){
-              return true
-            }else{
-              return false
-            }
-         
-        },
-        confirm(){
-            const _this = this
-            axios.post('http://127.0.0.1:12345/api/web/confirm',{
-                    details: _this.$store.state.details,
-                    banner: _this.$store.state.banner
-                }).then((res) => {
-                    console.log(res)
-                    alert('保存成功')
-                    
-                    this.$router.push('/')
-                })
-                .catch((err) => { 
-                    console.log(err)
-                })
-        },
-        delete(){
-
-        },
-        edit(platform,version){
-            this.$router.push({path:'/edit',query:{platform:platform,version: version}})
-        },
-        backToDown(platform){
-            this.$router.push({path:'/preview/platform/' + platform})
-        },
-        toDetail(platform, version){
-            this.$router.push({path:'/preview/detail',query:{platform: platform, version:version} })
+      deleteVersion(platform,version,index){
+        if(platform == this.$store.state.banner.platform && version == this.$store.state.details.version){
+          this.$store.state.details = {}
+          this.$store.state.banner = {}
+          this[platform].splice(index,1)
+          return
         }
+        axios.get('http://127.0.0.1:12345/api/web/delete',{
+          params:{
+            platform: platform,
+            version: version
+          }
+        }).then((res) => {
+          console.log(res)
+          if(res.data.code == 0){
+            this[platform].splice(index,1)
+          }
+        }).catch((err) => {
+          console.log(err)
+        })
+      },
+      selected(platform){
+          if(platform == this.$route.params.platform){
+            return true
+          }else{
+            return false
+          }
+      },
+      confirm(){
+          const _this = this
+          axios.post('http://127.0.0.1:12345/api/web/confirm',{
+                  details: _this.$store.state.details,
+                  banner: _this.$store.state.banner
+              }).then((res) => {
+                  console.log(res)
+                  alert('保存成功')
+                  
+                  this.$router.push('/')
+              })
+              .catch((err) => { 
+                  console.log(err)
+              })
+      },
+      edit(platform,version){
+          this.$router.push({path:'/edit',query:{platform:platform,version: version}})
+      },
+      backToDown(platform){
+          this.$router.push({path:'/preview/platform/' + platform})
+      },
+      toDetail(platform, version){
+          this.$router.push({path:'/preview/detail',query:{platform: platform, version:version} })
+      }
     }
 }
 </script>
 
 <style scoped>
+.deleteBtnPos{
+  position: absolute;
+  top:0;
+  right:0;
+}
+.editBtnPos{
+  position: absolute;
+  top:0;
+  right:-70px;
+}
 .buttons{
     text-align:center;
     margin-bottom:60px;

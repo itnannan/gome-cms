@@ -19,7 +19,9 @@
 			<span class="ios-btn" :class="[isActive=='ios'?active:'']" @click="changeActive('ios')">iOS</span>
 		</div>
 		<div class="content-box" id="contentBox">
-			<div class="windows-content" :class="{show : isActive=='windows'?true:false}">
+			<div class="windows-content" 
+				:style=" 'background-image:url(' + (banner.windows.background?banner.windows.background[0].src:'') + ')'" 
+				:class="{show : isActive=='windows'?true:false}">
 				<div class="download" >
 					<p class="title">{{banner.windows.title}}</p>
 					<p class="slogan">{{banner.windows.summary}}</p>
@@ -35,7 +37,9 @@
 					<a class="more" href="javascript:;" @click="toList('windows')">查看更多>></a>
 				</div>
 			</div>
-			<div class="mac-content" :class="{show : isActive=='mac'?true:false}">
+			<div class="mac-content" 
+				:style=" 'background-image:url(' + (banner.mac.background?banner.mac.background[0].src:'') + ')'" 
+				:class="{show : isActive=='mac'?true:false}">
 				<div class="download" >
 					<p class="title">{{banner.mac.title}}</p>
 					<p class="slogan">{{banner.mac.summary}}</p>
@@ -51,7 +55,9 @@
 					<a class="more" href="javascript:;" @click="toList('mac')">查看更多>></a>
 				</div>
 			</div>
-			<div class="android-content"  :class="{show : isActive=='android'?true:false}">
+			<div class="android-content"  
+				:style=" 'background-image:url(' + (banner.android.background?banner.android.background[0].src:'') + ')'" 
+				:class="{show : isActive=='android'?true:false}">
 				<div class="download" >
 					<p class="title">{{banner.android.title}}</p>
 					<p class="slogan">{{banner.android.summary}}</p>
@@ -61,12 +67,15 @@
 				<div class="version-list">
 					<p class="title">更新日志</p>
 					<ul>
-						<li v-for="item in details.android"><a :href="'../detail/android-' + item.version + '.html'">{{item.title}}<span class="time">{{item.time}}</span></a></li>
+						<li v-for="item in details.android"><a :href="'../detail/android-' + item.version + '.html'">{{item.title}}<span class="time">{{item.time}}</span></a>
+						</li>
 					</ul>
 					<a class="more" href="javascript:;" @click="toList('android')">查看更多>></a>
 				</div>
 			</div>
-			<div class="ios-content"  :class="{show : isActive=='ios'?true:false}">
+			<div class="ios-content"  
+				:style=" 'background-image:url(' + (banner.ios.background?banner.ios.background[0].src:'') + ')'" 
+				:class="{show : isActive=='ios'?true:false}">
 				<div class="download" >
 					<p class="title">{{banner.ios.title}}</p>
 					<p class="slogan">{{banner.ios.summary}}</p>
@@ -113,9 +122,9 @@
 	    created(){
 	    	const activePlatform = this.$route.params.platform
 	    	const _this = this
-	    	this.banner[activePlatform] = _this.$store.state.banner
-	    	if(_this.$store.state.details.version){
-	    		this.details[activePlatform].push(_this.$store.state.details)
+	    	if(this.$store.state.details.version){
+	    		this.banner[activePlatform] = this.$store.state.banner
+	    		this.details[activePlatform].push(this.$store.state.details)
 	    	}
 
 	    	this.changeActive(activePlatform)
@@ -129,14 +138,18 @@
 	    				let details = res.data.details
 
 	    				if(details && details.length){
-	    					if(_this.details[platform].length){
-	    						details = details.map(function(item){
-	    							if(item.version == _this.details[platform][0].version){
-	    								return _this.details[platform][0]
-	    							}else{
-	    								return item
-	    							}
-	    						})
+	    					if(platform == activePlatform && _this.details[platform][0]){
+	    						if(findSame(details, _this.details[platform][0])){
+	    							details = details.map((item) =>{
+	    								if(item.version == _this.details[platform][0].version){
+	    									return _this.details[platform][0]
+	    								}else{
+	    									return item
+	    								}
+	    							})
+	    						}else{
+	    							details.push(_this.details[platform][0])
+	    						}
 	    					}
 	    					_this.details[platform] = details
 	    				}
@@ -149,18 +162,33 @@
 	    				console.log(err)
 	    			})
 
-	    		if(activePlatform == platform){
-	    			return;
-	    		}
+	    	
 	    		axios.get('http://127.0.0.1:12345/api/web/banner/' + platform)
 	    			.then(function(res){
-						if(res.data.data){
-	    					_this.banner[platform] = res.data.data
+	    				const data = res.data.data
+						if(data && _this.banner[platform].background){
+							if(!_this.banner[platform].background.length){
+	    						_this.banner[platform].background = data.background
+							}
+	    				}else{
+	    					_this.banner[platform] = data
 	    				}
 	    			}).catch(function(err){
 	    				console.log(err)
 	    			})
 
+	    	}
+
+	    	function findSame(arr,item){
+	    		if(!item){
+	    			return false
+	    		}
+	    		for(let i=0; i<arr.length; i++){
+	    			if(arr[i].version == item.version){
+	    				return true
+	    			}
+	    		}
+	    		return false
 	    	}
 
 	    	getDate('windows')
@@ -169,10 +197,7 @@
 	    	getDate('ios')
 	    },
 	    computed:{
-	    	background:function(){
-	    		const platform = this.$route.params.id;
-	    		const img = this[platform].fileList[0]?this[platform].fileList[0].result:""
-	    		return img?'background-image:url('+img+')':''
+	    	bannerImg(platform){
 	    	}
 	    },
 	    methods: {

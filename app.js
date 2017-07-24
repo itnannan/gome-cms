@@ -8,10 +8,16 @@ const moment = require('moment')
 const mongoose = require('mongoose')
 const Banner = require('./db/model/banner')
 const Detail = require('./db/model/detail')
+
+//模板
+const getDetailText = require('./generate/web/detail/detail')
+const getListText = require('./generate/web/list/list')
+const getMainText = require('./generate/web/banner/banner')
+
 const app = express()
 const bodyParser = require('body-parser')
 const multer = require('multer')
-const picPath = 'target/'
+const picPath = 'target/img'
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, picPath)
@@ -42,8 +48,9 @@ Transform.prototype._flush  = function(cb){
 }
 
 app.listen(port)
-app.use("/target",express.static(path.join(__dirname,'target')))
+app.use(express.static(path.join(__dirname,'target')))
 app.use(express.static(path.join(__dirname,'src/components/web/')))
+app.use(express.static(path.join(__dirname,'dist/')))
 
 app.use(bodyParser.json({limit:5000000}))
 app.use(bodyParser.urlencoded({ extended: true ,limit:5000000}))
@@ -60,11 +67,6 @@ app.all('*',function(req,res,next){
     }
 })
 
-//录入页首页
-app.get('/',function(req,res){
-    res.sendFile('index.html',{root:__dirname+'/dist/'})
-})
-
 //图片上传
 app.post('/api/web/pic', upload.single('pic'), function(req,res){
     console.log(req.file)
@@ -73,16 +75,15 @@ app.post('/api/web/pic', upload.single('pic'), function(req,res){
     const destination = req.file.destination
 
     const oldpath = path.join(__dirname,destination,filename)
-    const newpath = destination + filename + '.' + mimetype
+    const newFileName = filename + '.' + mimetype
     //改名
-    fs.renameSync(oldpath, path.join(__dirname,newpath))
+    fs.renameSync(oldpath, path.join(__dirname,destination,newFileName))
     
-    res.send({msg:'ok',code:0, src:'http://127.0.0.1:12345/' + newpath,name:req.file.originalname})
+    res.send({msg:'ok',code:0, src: '/img/' + newFileName ,name:req.file.originalname})
 })
 
 //确定生成页面
 app.post('/api/web/confirm',function(req,res,next){
-    console.log(req.body)
 
     if(!req.body.details || !req.body.details.platform || !req.body.details.lists[0].title){
         return res.send({msg:"跟新详情至少一条",code:1})
@@ -115,7 +116,6 @@ app.post('/api/web/confirm',function(req,res,next){
     //banner背景图 
     if(req.body.banner.background.length == 0){
         Banner.sortByTime(platform,function(err,banners){
-            console.log(banners)
             if(!banners.length || !banners[0].background.length){
                 return res.send({msg:"请选择背景图片",code:1})
             }
@@ -143,7 +143,6 @@ app.post('/api/web/confirm',function(req,res,next){
                     if(err){
                         return console.log(err)
                     }
-                    console.log('update')
                     next()
                 })
         }else{
@@ -159,7 +158,6 @@ app.post('/api/web/confirm',function(req,res,next){
                 if(err){
                     return console.log(err)
                 }
-                console.log('save')
                 next()
             })
         }
@@ -205,13 +203,105 @@ app.post('/api/web/confirm',function(req,res,next){
                     if(err){
                         console.log(err)
                     }
-                    console.log(banner)
                     next()
                 })
         }
     })
 },function(req,res){
-    res.send({msg:'ok',code:0})
+    const platform = req.body.banner.platform
+    const version = req.body.banner.version
+    //三个页面生成
+    
+    //1.详情页
+    const detailPageText = getDetailText(req.body.details)
+    fs.writeFile(path.join(__dirname,'target/detail/',platform + '-' + version +'.html'), detailPageText, function(err){
+        if(err){
+            console.log(err)
+            //res.send({msg:err,code:1})
+        }
+    });
+
+    //2.列表页
+    const allDetails = {}
+    Detail.findByPlatform('windows',function(err,details){
+        if(err){
+            return console.log(err)
+        }
+        allDetails.windows = details
+        Detail.findByPlatform('ios',function(err,details){
+            if(err){
+                return console.log(err)
+            }
+            allDetails.ios = details
+            Detail.findByPlatform('android',function(err,details){
+                if(err){
+                    return console.log(err)
+                }
+                allDetails.android = details
+                Detail.findByPlatform('mac',function(err,details){
+                    if(err){
+                        return console.log(err)
+                    }
+                    allDetails.mac = details
+
+                    const listPageText = getListText(allDetails)
+                    fs.writeFile(path.join(__dirname,'target/versionList/versionList.html'), listPageText, function(err){
+                        if(err){
+                            console.log(err)
+                        }
+                    });
+                })
+            })
+        })
+    })
+
+    //3 下载页
+    const allBanners = {
+        windows:{},
+        ios:{},
+        android:{},
+        mac:{}
+    }
+    Banner.find({platform:'windows'}).sort({ctime:'-1'}).exec(function(err,banners){
+        if(err){
+            return console.log(err)
+        }
+        if(banners.length){
+            allBanners.windows = banners[0]
+        }
+        Banner.find({platform:'android'}).sort({ctime:'-1'}).exec(function(err,banners){
+            if(err){
+                return console.log(err)
+            }
+            if(banners.length){
+                allBanners.android = banners[0]
+            }
+            Banner.find({platform:'mac'}).sort({ctime:'-1'}).exec(function(err,banners){
+                if(err){
+                    return console.log(err)
+                }
+                if(banners.length){
+                    allBanners.mac = banners[0]
+                }
+                Banner.find({platform:'ios'}).sort({ctime:'-1'}).exec(function(err,banners){
+                    if(err){
+                        return console.log(err)
+                    }
+                    if(banners.length){
+                        allBanners.ios = banners[0]
+                    }
+                    const mainPageText = getMainText(allBanners,allDetails)
+                    fs.writeFile(path.join(__dirname,'target/main/main.html'), mainPageText, function(err){
+                        if(err){
+                            console.log(err)
+                        }
+
+                        res.send({msg:'ok',code:0})
+                    });
+                })
+            })
+        })
+    })
 })
 
 //列表
@@ -273,15 +363,15 @@ app.get('/api/web/edit',function(req,res){
 app.get('/api/web/delete',function(req,res){
     const platform = req.query.platform
     const version = req.query.version
-    Banner.findOne({platform:platform, version:version}).exec(function(err,banner){
+    Banner.remove({platform:platform, version:version}).exec(function(err){
         if(err){
             return console.log(err)
         }
-        Detail.findOne({platform:platform, version:version}).exec(function(err,detail){
+        Detail.remove({platform:platform, version:version}).exec(function(err){
             if(err){
                 return console.log(err)
             }
-            res.send({msg:'ok',code:0,data:{banner:banner,details:detail}})
+            res.send({msg:'ok',code:0})
         })
     })
 })
@@ -290,7 +380,7 @@ app.get('/api/web/delete',function(req,res){
 app.get('/api/web/banner/:platform',function(req,res){
     const platform = req.params.platform
 
-     Banner.find({platform:platform}).sort({ctime:'-1'}).exec(function(err,banners){
+    Banner.find({platform:platform}).sort({ctime:'-1'}).exec(function(err,banners){
         if(err){
             return console.log(err)
         }
