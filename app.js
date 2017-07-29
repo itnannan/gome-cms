@@ -69,7 +69,6 @@ app.all('*',function(req,res,next){
 
 //图片上传
 app.post('/api/web/pic', upload.single('pic'), function(req,res){
-    console.log(req.file)
     const mimetype = req.file.mimetype.split('/')[1]
     const filename = req.file.filename 
     const destination = req.file.destination
